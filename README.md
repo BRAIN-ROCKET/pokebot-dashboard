@@ -41,3 +41,7 @@ Environment overrides:
 
 ## Credits
 This dashboard is an independent UI that consumes the PokéBot Gen3 HTTP API. For the bot itself, profiles, and full documentation, see the original [PokéBot Gen3](https://github.com/40Cakes/pokebot-gen3) project by 40Cakes and the [PokéBot Gen3 wiki](https://github.com/40Cakes/pokebot-gen3/tree/main/wiki).
+
+## License
+
+No license, use all the provide code in any way for personal or commercial use!
