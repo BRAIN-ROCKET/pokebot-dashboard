@@ -1,0 +1,3 @@
+dashboard-port: 80
+bot-ip: "127.0.0.1"
+bot-port: 8888

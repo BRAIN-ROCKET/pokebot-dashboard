@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PokeBot Gen3 Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/modern-normalize/modern-normalize.css" />
+    <link rel="stylesheet" href="/static/css/styles.css" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='46' fill='%2300e5ff'/%3E%3Ccircle cx='50' cy='50' r='42' fill='%23141618'/%3E%3Ccircle cx='50' cy='50' r='8' fill='%2300e5ff'/%3E%3C/svg%3E">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="app-header">
+        <div class="title">
+          <span class="glow">PokeBot Gen3 Dashboard</span>
+        </div>
+        <div class="header-stats" id="headerStats">
+          <div class="chip" title="Upstream API"><span id="apiBase">—</span></div>
+          <div class="chip ok" id="healthChip">UP</div>
+          <div class="chip" title="FPS">FPS: <span id="liveFps">—</span></div>
+          <div class="chip" title="Encounter Rate">ER: <span id="encRate">—</span>/h</div>
+          <div class="chip" title="Phase Encounters">Phase: <span id="phaseEnc">—</span></div>
+          <div class="chip" title="Total Encounters">Total: <span id="totalEnc">—</span></div>
+          <div class="chip shiny" title="Shiny Count">Shinies: <span id="shinyCount">—</span></div>
+        </div>
+      </header>
+
+      <main class="layout">
+        <section class="panel video-panel">
+          <div class="panel-header">
+            <h3>Live Video</h3>
+            <div class="controls">
+              <label>Speed
+                <select id="speedSelect">
+                  <option value="0">x0</option>
+                  <option value="1">x1</option>
+                  <option value="2">x2</option>
+                  <option value="3">x3</option>
+                  <option value="4" selected>x4</option>
+                </select>
+              </label>
+              <label>Bot Mode
+                <select id="botMode"></select>
+              </label>
+              <label>Video
+                <select id="videoEnabled">
+                  <option value="true" selected>On</option>
+                  <option value="false">Off</option>
+                </select>
+              </label>
+              <label>Audio
+                <select id="audioEnabled">
+                  <option value="true">On</option>
+                  <option value="false" selected>Off</option>
+                </select>
+              </label>
+            </div>
+          </div>
+          <div class="video-wrapper">
+            <img id="screenImg" width="960" height="640" alt="video stream" />
+            <div class="video-overlay" id="videoOverlay">
+              <div class="overlay-row"><span id="overlayGame">—</span> · <span id="overlayProfile">—</span></div>
+              <div class="overlay-row"><span id="overlayMode">—</span> · <span id="overlaySpeed">—</span>x</div>
+            </div>
+          </div>
+          <div style="padding: 12px;">
+            <div class="card">
+              <div class="card-header"><h4>Shiny Log</h4></div>
+              <div class="card-body pk-list" id="shinyCards"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel side-panel">
+          <div class="grid-2">
+            <div class="card card-enc-graph">
+              <div class="card-header"><h4>Encounters / h</h4></div>
+              <div class="card-body">
+                <canvas id="encChart" height="110"></canvas>
+              </div>
+            </div>
+
+            <div class="card card-stats">
+              <div class="card-header"><h4>Stats</h4></div>
+              <div class="card-body stats-grid">
+                <div><div class="label">Current Phase</div><div class="value" id="statPhase">—</div></div>
+                <div><div class="label">Phase Enc.</div><div class="value" id="statPhaseEnc">—</div></div>
+                <div><div class="label">Total Enc.</div><div class="value" id="statTotalEnc">—</div></div>
+                <div><div class="label">Shinies</div><div class="value shiny" id="statShinies">—</div></div>
+                <div><div class="label">Enc./h</div><div class="value" id="statER">—</div></div>
+                <div><div class="label">Runtime</div><div class="value" id="statRuntime">—</div></div>
+              </div>
+            </div>
+
+            <div class="card card-opponent">
+              <div class="card-header"><h4>Opponent</h4></div>
+              <div class="card-body pk-list" id="opponentCard"></div>
+            </div>
+
+            <div class="card card-player">
+              <div class="card-header"><h4>Player</h4></div>
+              <div class="card-body" id="playerBox">
+                <div class="kv"><span class="k">Name</span><span class="v" id="playerName">—</span></div>
+                <div class="kv"><span class="k">TID/SID</span><span class="v" id="playerIds">—</span></div>
+                <div class="kv"><span class="k">Money</span><span class="v" id="playerMoney">—</span></div>
+                <div class="kv"><span class="k">Location</span><span class="v" id="playerLoc">—</span></div>
+                <div class="kv"><span class="k">Coords</span><span class="v" id="playerCoords">—</span></div>
+              </div>
+            </div>
+
+            <div class="card card-mapenc">
+              <div class="card-header"><h4>Map Encounters</h4></div>
+              <div class="card-body">
+                <table class="table" id="encountersTable">
+                  <thead><tr><th>Species</th><th>Lv</th><th>%</th><th>Effective</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="card card-party">
+              <div class="card-header"><h4>Party</h4></div>
+              <div class="card-body pk-list" id="partyCards"></div>
+            </div>
+
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+  </body>
+  </html>
+
+
