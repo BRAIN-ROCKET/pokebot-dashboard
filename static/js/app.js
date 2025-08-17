@@ -237,7 +237,9 @@
     // Auto-apply on change for all controls
     if (els.speedSelect) {
       els.speedSelect.addEventListener('change', async () => {
-        const val = Math.max(0, Math.min(4, Number(els.speedSelect.value || '1')));
+        const raw = Number(els.speedSelect.value || '1');
+        const allowed = new Set([0,1,2,3,4,8,16,32]);
+        const val = allowed.has(raw) ? raw : 1;
         await API.post('/emulator', { emulation_speed: val });
         refreshEmulator();
       });
@@ -298,7 +300,8 @@
       els.overlayGame.textContent = gameTitle;
       els.overlayProfile.textContent = info?.profile?.name || toText(info?.profile, '—');
       els.overlayMode.textContent = toText(info?.bot_mode, '—');
-      els.overlaySpeed.textContent = toText(info?.emulation_speed, '—');
+      const spd = info?.emulation_speed;
+      els.overlaySpeed.textContent = (typeof spd === 'number') ? (spd === 0 ? '∞' : String(spd)) : '—';
       // set dropdown to current mode
       if (els.botMode && info?.bot_mode) {
         const val = String(info.bot_mode);
@@ -307,7 +310,8 @@
       }
       // set speed dropdown to current speed
       if (typeof info?.emulation_speed === 'number' && els.speedSelect) {
-        const v = Math.max(0, Math.min(4, Math.round(info.emulation_speed)));
+        const allowed = [0,1,2,3,4,8,16,32];
+        const v = allowed.includes(info.emulation_speed) ? info.emulation_speed : 1;
         els.speedSelect.value = String(v);
       }
       if (info && info.video_enabled !== undefined) {
