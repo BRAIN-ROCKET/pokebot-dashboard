@@ -65,7 +65,15 @@ def proxy(subpath: str):
 def _proxy_post(path: str):
     upstream_url = f"{BOT_API_BASE}/{path}"
     try:
-        upstream = requests.post(upstream_url, json=request.get_json(silent=True) or {}, timeout=10)
+        # Forward the raw body so empty arrays ([]) are preserved; using json= would
+        # coerce [] to {} due to falsy checks upstream.
+        upstream = requests.post(
+            upstream_url,
+            params=request.args,
+            data=request.get_data(),
+            headers={"Content-Type": request.headers.get("Content-Type", "application/json")},
+            timeout=10,
+        )
         headers = {"Content-Type": upstream.headers.get("Content-Type", "application/json"),
                    "Cache-Control": "no-cache"}
         return Response(upstream.content, status=upstream.status_code, headers=headers)

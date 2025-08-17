@@ -32,7 +32,10 @@
       <main class="layout">
         <section class="panel video-panel">
           <div class="panel-header">
-            <h3>Live Video</h3>
+            <div>
+              <h3>Live Video</h3>
+              <div class="subtitle" id="videoMeta">—</div>
+            </div>
             <div class="controls">
               <label>Speed
                 <select id="speedSelect">
@@ -64,10 +67,34 @@
             </div>
           </div>
           <div class="video-wrapper">
-            <img id="screenImg" width="960" height="640" alt="video stream" />
-            <div class="video-overlay" id="videoOverlay">
-              <div class="overlay-row"><span id="overlayGame">—</span> · <span id="overlayProfile">—</span></div>
-              <div class="overlay-row"><span id="overlayMode">—</span> · <span id="overlaySpeed">—</span></div>
+            <img id="screenImg" width="960" height="640" alt="video stream" draggable="false" />
+            <div class="input-overlay" id="inputOverlay" style="display:none;">
+              <div class="corner tl">
+                <button class="btn-input shoulder" data-btn="L">L</button>
+              </div>
+              <div class="corner tr">
+                <button class="btn-input shoulder" data-btn="R">R</button>
+              </div>
+
+              <div class="cluster bl">
+                <div class="axis-grid">
+                  <button class="btn-input up" data-btn="Up" aria-label="Up">▲</button>
+                  <button class="btn-input left" data-btn="Left" aria-label="Left">◀</button>
+                  <div class="center"></div>
+                  <button class="btn-input right" data-btn="Right" aria-label="Right">▶</button>
+                  <button class="btn-input down" data-btn="Down" aria-label="Down">▼</button>
+                </div>
+              </div>
+
+              <div class="cluster br">
+                <div class="axis-grid">
+                  <button class="btn-input up" data-btn="Start" aria-label="Start">STR</button>
+                  <button class="btn-input left" data-btn="Select" aria-label="Select">SEL</button>
+                  <div class="center"></div>
+                  <button class="btn-input right a" data-btn="A" aria-label="A">A</button>
+                  <button class="btn-input down b" data-btn="B" aria-label="B">B</button>
+                </div>
+              </div>
             </div>
           </div>
           <div style="padding: 12px;">

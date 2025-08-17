@@ -72,6 +72,8 @@
     audioEnabled: document.getElementById('audioEnabled'),
     applyVideo: document.getElementById('applyVideo'),
     applyAudio: document.getElementById('applyAudio'),
+    // input overlay
+    inputOverlay: document.getElementById('inputOverlay'),
   };
 
   // Video
@@ -219,6 +221,7 @@
     refreshHealth();
     refreshStatic();
     refreshModes();
+    setupInputOverlay();
     // Pollers
     setInterval(refreshHealth, 3000);
     setInterval(refreshStats, 1500);
@@ -268,6 +271,88 @@
     }
   }
 
+  // Input overlay wiring
+  function setupInputOverlay() {
+    const overlay = els.inputOverlay;
+    if (!overlay) return;
+
+    const active = new Set();
+    const pointerToButton = new Map();
+    let pressTimer = null;
+
+    const send = async () => {
+      // API requires a JSON array (even empty) with Content-Type application/json
+      const arr = Array.from(active);
+      try {
+        await fetch('/proxy_post/input', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(arr)
+        });
+      } catch (_) {}
+    };
+
+    const press = (btn) => {
+      if (!btn) return;
+      active.add(btn);
+      send();
+    };
+    const release = (btn) => {
+      if (!btn) return;
+      active.delete(btn);
+      send();
+    };
+
+    // Pointer helpers for multi-touch
+    const onDown = (e) => {
+      e.preventDefault();
+      const btn = e.currentTarget.getAttribute('data-btn');
+      try { e.currentTarget.setPointerCapture(e.pointerId); } catch(_) {}
+      e.currentTarget.classList.add('active');
+      press(btn);
+      if (e.pointerId != null) pointerToButton.set(e.pointerId, btn);
+    };
+    const onUp = (e) => {
+      e.preventDefault();
+      const btn = e.currentTarget.getAttribute('data-btn');
+      e.currentTarget.classList.remove('active');
+      release(btn);
+      if (e.pointerId != null) pointerToButton.delete(e.pointerId);
+    };
+
+    overlay.querySelectorAll('.btn-input').forEach(el => {
+      el.addEventListener('pointerdown', onDown);
+      el.addEventListener('pointerup', onUp);
+      el.addEventListener('pointercancel', onUp);
+      el.addEventListener('pointerleave', onUp);
+      el.addEventListener('lostpointercapture', onUp);
+    });
+
+    // If pointer ends outside button, fallback by pointerId
+    const globalReleaseByEvent = (e) => {
+      if (e && e.pointerId != null && pointerToButton.has(e.pointerId)) {
+        const btn = pointerToButton.get(e.pointerId);
+        pointerToButton.delete(e.pointerId);
+        active.delete(btn);
+        send();
+        overlay.querySelectorAll('.btn-input').forEach(b => {
+          if (b.getAttribute('data-btn') === btn) b.classList.remove('active');
+        });
+      }
+    };
+    window.addEventListener('pointerup', globalReleaseByEvent);
+    window.addEventListener('pointercancel', globalReleaseByEvent);
+
+    // If page loses visibility, release all
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden && active.size) {
+        active.clear();
+        send();
+        overlay.querySelectorAll('.btn-input.active').forEach(b => b.classList.remove('active'));
+      }
+    });
+  }
+
   // Refreshers
   async function refreshHealth() {
     try {
@@ -297,11 +382,13 @@
     try {
       const info = await API.get('/emulator');
       const gameTitle = info?.game?.title || info?.game?.name || toText(info?.game, '—');
-      els.overlayGame.textContent = gameTitle;
-      els.overlayProfile.textContent = info?.profile?.name || toText(info?.profile, '—');
-      els.overlayMode.textContent = toText(info?.bot_mode, '—');
+      const prof = info?.profile?.name || toText(info?.profile, '—');
+      const mode = toText(info?.bot_mode, '—');
       const spd = info?.emulation_speed;
-      els.overlaySpeed.textContent = (typeof spd === 'number') ? (spd === 0 ? '∞' : String(spd)) : '—';
+      const spdText = (typeof spd === 'number') ? (spd === 0 ? '∞' : `x${spd}`) : '—';
+      const meta = `${gameTitle} · ${prof} · ${mode} · ${spdText}`;
+      const metaEl = document.getElementById('videoMeta');
+      if (metaEl) metaEl.textContent = meta;
       // set dropdown to current mode
       if (els.botMode && info?.bot_mode) {
         const val = String(info.bot_mode);
@@ -313,6 +400,12 @@
         const allowed = [0,1,2,3,4,8,16,32];
         const v = allowed.includes(info.emulation_speed) ? info.emulation_speed : 1;
         els.speedSelect.value = String(v);
+      }
+
+      // Toggle input overlay only in Manual mode
+      if (els.inputOverlay) {
+        const show = String(info?.bot_mode || '').toLowerCase() === 'manual';
+        els.inputOverlay.style.display = show ? 'block' : 'none';
       }
       if (info && info.video_enabled !== undefined) {
         els.videoEnabled.value = String(!!info.video_enabled);

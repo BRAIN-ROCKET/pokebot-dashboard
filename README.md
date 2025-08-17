@@ -9,6 +9,7 @@ This is a simple, cross-platform web UI that connects to the PokéBot Gen3 HTTP 
 - Pokémon stats for Opponent, Party, and Shiny Log
 - Map encounters table
 - Instant controls (emulation speed, bot mode, video/audio) with auto-apply
+- Manual on-screen controls in Manual mode (D-pad, A/B, L/R, Start/Select), mobile-friendly multi‑touch
 
 
 ## Requirements
